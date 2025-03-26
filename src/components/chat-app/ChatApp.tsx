@@ -76,7 +76,9 @@ const ChatApp: React.FC = () => {
   useEffect(() => {
     if (room) {
       localStorage.setItem(`chat_messages_${room}`, JSON.stringify(messages))
-      messagesEndRef.current?.scrollIntoView()
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }, 100)
     }
   }, [messages])
 
