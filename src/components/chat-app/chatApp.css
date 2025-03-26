@@ -43,18 +43,44 @@
 }
 
 .chat-message {
+  display: flex;
+  flex-direction: column;
+
   padding: 6px;
   margin-bottom: 6px;
   border-bottom: 1px solid #eee;
+  border-radius: 8px;
   cursor: pointer;
+
+  transition: all 0.3s ease-in-out;
+}
+
+.chat-message-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.message-time {
+  font-size: 12px;
+  color: #888;
 }
 
 .chat-message:hover {
   background: #f0f0f0;
+  border-radius: 8px;
+}
+
+.chat-message.highlight {
+  background: #cecece;
+  border-radius: 8px;
 }
 
 .chat-quote {
-  max-height: 80px;
+  display: flex;
+  flex-direction: column;
+
+  max-height: 300px;
 
   margin-top: 4px;
   padding: 4px;
@@ -65,6 +91,13 @@
   overflow: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
+
+  transition: all 0.2s ease-in-out;
+}
+
+.chat-quote:hover {
+  background: #dfdfdf;
+  border-radius: 8px;
 }
 
 .chat-selected-quote {
@@ -74,6 +107,7 @@
   padding: 6px;
   margin-bottom: 6px;
   border-left: 3px solid #555;
+  border-radius: 5px;
   word-wrap: break-word;
 
   overflow: auto;
@@ -143,24 +177,16 @@
 }
 
 .chat-media {
-  max-width: 100%;
+  max-width: 50%;
   max-height: 300px;
   margin-top: 10px;
   border-radius: 8px;
-  object-fit: cover;
 }
 
-.chat-media img {
-  max-width: 100%;
-  max-height: 300px;
-  border-radius: 8px;
-  margin-top: 10px;
-  object-fit: contain;
-}
-
+.chat-media img,
 .chat-media video {
-  max-width: 100%;
-  max-height: 300px;
+  width: 100%;
+  height: 100%;
   border-radius: 8px;
   margin-top: 10px;
   object-fit: contain;
@@ -231,5 +257,9 @@
 
   .chat-messages {
     height: 500px;
+  }
+
+  .chat-media {
+    max-width: 70%;
   }
 }

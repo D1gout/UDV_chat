@@ -18,6 +18,9 @@ const ChatApp: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([])
   const [message, setMessage] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [highlightedMessageId, setHighlightedMessageId] = useState<
+    string | null
+  >(null)
 
   const [selectedQuote, setSelectedQuote] = useState<Message | null>(null)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
@@ -99,6 +102,13 @@ const ChatApp: React.FC = () => {
     fileInputRef.current && (fileInputRef.current.value = '')
   }, [message, file, selectedQuote, username])
 
+  const formatTimestamp = (timestamp: number) => {
+    const date = new Date(timestamp)
+    const hours = date.getHours().toString()
+    const minutes = date.getMinutes().toString().padStart(2, '0')
+    return `${hours}:${minutes}`
+  }
+
   const handleEmojiClick = (emojiObject: { emoji: string }) => {
     setMessage(prev => prev + emojiObject.emoji)
   }
@@ -138,6 +148,23 @@ const ChatApp: React.FC = () => {
     navigate('/')
   }
 
+  const handleQuoteClick = (msg: Message) => {
+    const messageElement = document.getElementById(msg.id)
+    if (messageElement) {
+      messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setHighlightedMessageId(msg.id)
+    }
+  }
+
+  useEffect(() => {
+    if (highlightedMessageId) {
+      const timeout = setTimeout(() => {
+        setHighlightedMessageId(null)
+      }, 2000) // Убираем подсветку через 2 секунды
+      return () => clearTimeout(timeout)
+    }
+  }, [highlightedMessageId])
+
   return (
     <div
       className='chat-container'
@@ -150,10 +177,19 @@ const ChatApp: React.FC = () => {
         {messages.map(msg => (
           <div
             key={msg.id}
-            className='chat-message'
-            onClick={() => setSelectedQuote(msg)}
+            id={msg.id}
+            className={`chat-message ${
+              msg.id === highlightedMessageId ? 'highlight' : ''
+            }`} // Подсвечиваем
+            onDoubleClick={() => setSelectedQuote(msg)}
           >
-            <strong>{msg.user}:</strong> {msg.text}
+            <div className='chat-message-header'>
+              <strong>{msg.user}</strong>
+              <span className='message-time'>
+                {formatTimestamp(msg.timestamp)}
+              </span>
+            </div>
+            <span>{msg.text}</span>
             {msg.media &&
               (msg.media.type.endsWith('mp4') ? (
                 <video controls className='chat-media'>
@@ -167,8 +203,11 @@ const ChatApp: React.FC = () => {
                 />
               ))}
             {msg.quote && (
-              <div className='chat-quote'>
-                <strong>{msg.quote.user}:</strong>{' '}
+              <div
+                className='chat-quote'
+                onClick={() => handleQuoteClick(msg.quote || msg)}
+              >
+                <strong>{msg.quote.user}</strong>
                 {msg.quote.text || (
                   <>
                     {msg.quote.media?.type.endsWith('mp4') ? (
