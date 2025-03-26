@@ -162,7 +162,7 @@ const ChatApp: React.FC = () => {
     if (highlightedMessageId) {
       const timeout = setTimeout(() => {
         setHighlightedMessageId(null)
-      }, 2000) // Убираем подсветку через 2 секунды
+      }, 2000)
       return () => clearTimeout(timeout)
     }
   }, [highlightedMessageId])
@@ -182,7 +182,7 @@ const ChatApp: React.FC = () => {
             id={msg.id}
             className={`chat-message ${
               msg.id === highlightedMessageId ? 'highlight' : ''
-            }`} // Подсвечиваем
+            }`}
             onDoubleClick={() => setSelectedQuote(msg)}
           >
             <div className='chat-message-header'>
