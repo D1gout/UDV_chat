@@ -1,6 +1,7 @@
 .chat-container {
-  width: 500px;
-  max-width: 100%;
+  position: relative;
+  width: 1000px;
+  max-width: 80%;
   margin: auto;
   padding: 16px;
   background: #f4f4f4;
@@ -24,13 +25,17 @@
 }
 
 .chat-messages {
-  height: 300px;
-  overflow-y: auto;
+  max-width: 100%;
+  max-height: 100%;
+  height: 600px;
+
   padding: 8px;
   background: white;
   border: 1px solid #ddd;
   border-radius: 4px;
   margin-bottom: 8px;
+
+  word-wrap: break-word;
 
   overflow: auto;
   scrollbar-width: none;
@@ -49,28 +54,39 @@
 }
 
 .chat-quote {
+  max-height: 80px;
+
   margin-top: 4px;
   padding: 4px;
   border-left: 3px solid #888;
   font-size: 14px;
   color: #555;
+
+  overflow: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .chat-selected-quote {
   position: relative;
+  max-height: 80px;
   background: #e0e0e0;
   padding: 6px;
   margin-bottom: 6px;
   border-left: 3px solid #555;
+  word-wrap: break-word;
+
+  overflow: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .chat-selected-quote-close {
   width: 18px;
   height: 18px;
   position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 2px;
+  top: 2px;
 }
 
 .chat-selected-quote-close svg {
@@ -83,6 +99,11 @@
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
+
+  resize: none;
+  overflow: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .chat-input-container {
@@ -177,8 +198,38 @@
   fill: #000;
 }
 
+.chat-close-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+
+  background-color: #fff;
+  width: 30px;
+  height: 30px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.chat-container:hover .chat-close-button {
+  opacity: 1;
+}
+
 @media (max-width: 768px) {
   .chat-container {
     margin: 0px;
+
+    max-width: 100%;
+  }
+
+  .chat-messages {
+    height: 500px;
   }
 }

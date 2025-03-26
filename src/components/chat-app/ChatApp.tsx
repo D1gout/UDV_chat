@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { v4 as uuidv4 } from 'uuid'
+
 import Picker from 'emoji-picker-react'
 
 import './chatApp.css'
+
 import { Message } from '../../types/types'
 
 import { FaPaperclip } from 'react-icons/fa6'
 import { MdClose } from 'react-icons/md'
+import { useNavigate } from 'react-router-dom'
 
 const ChatApp: React.FC = () => {
   const [username, setUsername] = useState('')
@@ -14,19 +17,20 @@ const ChatApp: React.FC = () => {
 
   const [messages, setMessages] = useState<Message[]>([])
   const [message, setMessage] = useState('')
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const [selectedQuote, setSelectedQuote] = useState<Message | null>(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [sessionId, setSessionId] = useState<string>('')
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
 
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null)
 
-  const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
 
+  const navigate = useNavigate()
+
   useEffect(() => {
-    const savedBackgroundImage = localStorage.getItem('chat_background')
+    const savedBackgroundImage = sessionStorage.getItem('chat_background')
     if (savedBackgroundImage) {
       setBackgroundImage(savedBackgroundImage)
     }
@@ -34,73 +38,76 @@ const ChatApp: React.FC = () => {
 
   useEffect(() => {
     const storedSessionId = sessionStorage.getItem('chat_session_id')
+    const savedUsername = sessionStorage.getItem('chat_username')
+    const savedRoom = sessionStorage.getItem('chat_room')
+
     const newSessionId = storedSessionId || uuidv4()
-    setSessionId(newSessionId)
     sessionStorage.setItem('chat_session_id', newSessionId)
 
-    if (storedSessionId) {
-      const savedUsername = sessionStorage.getItem('chat_username')
-      const savedRoom = sessionStorage.getItem('chat_room')
-
-      if (savedUsername && savedRoom) {
-        setUsername(savedUsername)
-        setRoom(savedRoom)
-        setIsAuthenticated(true)
-      }
+    if (storedSessionId && savedUsername && savedRoom) {
+      setUsername(savedUsername)
+      setRoom(savedRoom)
+    } else {
+      navigate('/')
     }
   }, [])
 
   useEffect(() => {
     if (room) {
       const storedMessages = localStorage.getItem(`chat_messages_${room}`)
-      if (storedMessages) setMessages(JSON.parse(storedMessages))
+      if (storedMessages) {
+        setMessages(JSON.parse(storedMessages))
+      }
     }
+
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === `chat_messages_${room}` && event.newValue) {
+        setMessages(JSON.parse(event.newValue))
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
   }, [room])
 
   useEffect(() => {
     if (room) {
       localStorage.setItem(`chat_messages_${room}`, JSON.stringify(messages))
+      messagesEndRef.current?.scrollIntoView()
     }
   }, [messages])
 
-  const handleLogin = () => {
-    if (username.trim() && room.trim()) {
-      setIsAuthenticated(true)
-
-      sessionStorage.setItem('chat_username', username)
-      sessionStorage.setItem('chat_room', room)
-
-      localStorage.setItem(`chat_messages_${room}`, JSON.stringify(messages))
-    }
-  }
-
-  const handleSendMessage = () => {
+  const handleSendMessage = useCallback(() => {
     if (!message.trim() && !file) return
     const newMessage: Message = {
       id: uuidv4(),
-      user: `${username} (${sessionId.slice(0, 5)})`,
+      user: username,
       text: message,
       timestamp: Date.now(),
       quote: selectedQuote || undefined,
       media: file
-        ? {
-            content: URL.createObjectURL(file),
-            type: file.type,
-          }
+        ? { content: URL.createObjectURL(file), type: file.type }
         : undefined,
     }
-    setMessages([...messages, newMessage])
+    setMessages(prev => {
+      localStorage.setItem(`chat_messages_${room}`, JSON.stringify(messages))
+      return [...prev, newMessage]
+    })
     setMessage('')
     setSelectedQuote(null)
     setFile(null)
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
-  }
+    fileInputRef.current && (fileInputRef.current.value = '')
+  }, [message, file, selectedQuote, username])
 
   const handleEmojiClick = (emojiObject: { emoji: string }) => {
     setMessage(prev => prev + emojiObject.emoji)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSendMessage()
+    }
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -117,34 +124,18 @@ const ChatApp: React.FC = () => {
       reader.onloadend = () => {
         const imageUrl = reader.result as string
         setBackgroundImage(imageUrl)
-        localStorage.setItem('chat_background', imageUrl)
+        sessionStorage.setItem('chat_background', imageUrl)
       }
 
       reader.readAsDataURL(file)
     }
   }
 
-  if (!isAuthenticated) {
-    return (
-      <div className='chat-container'>
-        <h1 className='chat-title'>Вход в чат</h1>
-        <input
-          className='chat-input'
-          placeholder='Введите имя'
-          value={username}
-          onChange={e => setUsername(e.target.value)}
-        />
-        <input
-          className='chat-input'
-          placeholder='Введите номер комнаты'
-          value={room}
-          onChange={e => setRoom(e.target.value)}
-        />
-        <button className='chat-button' onClick={handleLogin}>
-          Войти
-        </button>
-      </div>
-    )
+  const handleExit = () => {
+    sessionStorage.removeItem('chat_username')
+    sessionStorage.removeItem('chat_room')
+
+    navigate('/')
   }
 
   return (
@@ -200,6 +191,7 @@ const ChatApp: React.FC = () => {
             )}
           </div>
         ))}
+        <div ref={messagesEndRef} />
       </div>
       {selectedQuote && (
         <div className='chat-selected-quote'>
@@ -217,6 +209,7 @@ const ChatApp: React.FC = () => {
         placeholder='Сообщение'
         value={message}
         onChange={e => setMessage(e.target.value)}
+        onKeyDown={handleKeyDown}
       />
       <div className='chat-input-container'>
         <button
@@ -277,6 +270,9 @@ const ChatApp: React.FC = () => {
           onChange={handleBackgroundChange}
           style={{ display: 'none' }}
         />
+      </div>
+      <div className='chat-close-button' onClick={handleExit}>
+        <MdClose />
       </div>
     </div>
   )
