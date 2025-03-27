@@ -80,6 +80,11 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
             ? storageService.getItem(msg.media.content) || msg.media.content
             : null
 
+          const mediaContentQuote = msg.quote?.media?.content
+            ? storageService.getItem(msg.quote.media.content) ||
+              msg.quote.media.content
+            : undefined
+
           return (
             <div
               key={msg.id}
@@ -111,24 +116,22 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
                   onClick={() => handleQuoteClick(msg.quote || msg)}
                 >
                   <strong>{msg.quote.user}</strong>
-                  {msg.quote.text || (
-                    <>
-                      {msg.quote.media?.type.endsWith('mp4') ? (
-                        <video controls className='chat-media'>
-                          <source
-                            src={msg.quote.media.content}
-                            type='video/mp4'
+                  {msg.quote.text ||
+                    (mediaContentQuote && (
+                      <>
+                        {msg.quote.media?.type.endsWith('mp4') ? (
+                          <video controls className='chat-media'>
+                            <source src={mediaContentQuote} type='video/mp4' />
+                          </video>
+                        ) : (
+                          <img
+                            src={mediaContentQuote}
+                            alt='media'
+                            className='chat-media'
                           />
-                        </video>
-                      ) : (
-                        <img
-                          src={msg.quote.media?.content}
-                          alt='media'
-                          className='chat-media'
-                        />
-                      )}
-                    </>
-                  )}
+                        )}
+                      </>
+                    ))}
                 </div>
               )}
             </div>
