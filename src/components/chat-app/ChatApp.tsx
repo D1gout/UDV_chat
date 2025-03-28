@@ -20,6 +20,11 @@ const ChatApp: React.FC = () => {
 
   const [messages, setMessages] = useState<Message[]>([])
   const [message, setMessage] = useState('')
+  const messagesEndRef = useRef<HTMLDivElement | null>(null)
+  const [isMessagesLoaded, setIsMessagesLoaded] = useState(false)
+  const [highlightedMessageId, setHighlightedMessageId] = useState<
+    string | null
+  >(null)
 
   const [selectedQuote, setSelectedQuote] = useState<Message | null>(null)
 
@@ -78,6 +83,53 @@ const ChatApp: React.FC = () => {
     navigate('/')
   }
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0])
+    }
+  }
+
+  const handleBackgroundChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0]
+      const reader = new FileReader()
+
+      reader.onloadend = () => {
+        const imageUrl = reader.result as string
+        setBackgroundImage(imageUrl)
+        sessionStorage.setItem('chat_background', imageUrl)
+      }
+
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleQuoteClick = (msg: Message) => {
+    const messageElement = document.getElementById(msg.id)
+    if (messageElement) {
+      messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setHighlightedMessageId(msg.id)
+    }
+  }
+
+  const formatTimestamp = (timestamp: number) => {
+    const date = new Date(timestamp)
+    const hours = date.getHours().toString()
+    const minutes = date.getMinutes().toString().padStart(2, '0')
+    return `${hours}:${minutes}`
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSendMessage()
+    }
+  }
+
+  const handleEmojiClick = (emojiObject: { emoji: string }) => {
+    setMessage(prev => prev + emojiObject.emoji)
+  }
+
   useEffect(() => {
     const storedSessionId = sessionStorage.getItem('chat_session_id')
     const savedUsername = sessionStorage.getItem('chat_username')
@@ -94,6 +146,50 @@ const ChatApp: React.FC = () => {
     }
   }, [])
 
+  useEffect(() => {
+    if (room) {
+      const storedMessages = localStorage.getItem(`chat_messages_${room}`)
+      if (storedMessages) {
+        setMessages(JSON.parse(storedMessages))
+      }
+      setIsMessagesLoaded(true)
+    }
+
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === `chat_messages_${room}` && event.newValue) {
+        setMessages(JSON.parse(event.newValue))
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [room])
+
+  useEffect(() => {
+    if (isMessagesLoaded) {
+      localStorage.setItem(`chat_messages_${room}`, JSON.stringify(messages))
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }, 100)
+    }
+  }, [messages, isMessagesLoaded])
+
+  useEffect(() => {
+    const savedBackgroundImage = sessionStorage.getItem('chat_background')
+    if (savedBackgroundImage) {
+      setBackgroundImage(savedBackgroundImage)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (highlightedMessageId) {
+      const timeout = setTimeout(() => {
+        setHighlightedMessageId(null)
+      }, 2000)
+      return () => clearTimeout(timeout)
+    }
+  }, [highlightedMessageId])
+
   return (
     <div
       className='chat-container'
@@ -105,27 +201,29 @@ const ChatApp: React.FC = () => {
 
       <ChatMessages
         messages={messages}
-        setMessages={setMessages}
-        room={room}
+        messagesEndRef={messagesEndRef}
+        highlightedMessageId={highlightedMessageId}
         selectedQuote={selectedQuote}
         setSelectedQuote={setSelectedQuote}
+        onformatTimestamp={formatTimestamp}
+        onQuoteClick={handleQuoteClick}
       />
 
       <ChatInput
         message={message}
         setMessage={setMessage}
-        handleSendMessage={handleSendMessage}
         fileInputRef={fileInputRef}
         file={file}
-        setFile={setFile}
+        onKeyDown={handleKeyDown}
+        onFileChange={handleFileChange}
       />
 
       <ChatButtons
-        setMessage={setMessage}
-        handleSendMessage={handleSendMessage}
+        onEmojiClick={handleEmojiClick}
+        onSendMessage={handleSendMessage}
       />
 
-      <ChatBackground setBackgroundImage={setBackgroundImage} />
+      <ChatBackground onBackgroundImageChange={handleBackgroundChange} />
 
       <div className='chat-close-button' onClick={handleExit}>
         <MdClose />

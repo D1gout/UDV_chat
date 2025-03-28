@@ -9,15 +9,6 @@ const AuthModal: React.FC = () => {
 
   const navigate = useNavigate()
 
-  useEffect(() => {
-    const savedUsername = sessionStorage.getItem('chat_username')
-    const savedRoom = sessionStorage.getItem('chat_room')
-
-    if (savedUsername && savedRoom) {
-      navigate('/chat')
-    }
-  }, [navigate])
-
   const handleLogin = () => {
     if (username.trim() && room.trim()) {
       sessionStorage.setItem('chat_username', username)
@@ -31,6 +22,22 @@ const AuthModal: React.FC = () => {
       navigate('/chat')
     }
   }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      handleLogin()
+    }
+  }
+
+  useEffect(() => {
+    const savedUsername = sessionStorage.getItem('chat_username')
+    const savedRoom = sessionStorage.getItem('chat_room')
+
+    if (savedUsername && savedRoom) {
+      navigate('/chat')
+    }
+  }, [navigate])
 
   return (
     <div className='auth-container'>
@@ -46,6 +53,7 @@ const AuthModal: React.FC = () => {
         placeholder='Введите номер комнаты'
         value={room}
         onChange={e => setRoom(e.target.value)}
+        onKeyDown={handleKeyDown}
       />
       <button className='auth-button' onClick={handleLogin}>
         Войти

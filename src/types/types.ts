@@ -9,26 +9,28 @@ export interface Message {
 
 export interface ChatMessagesProps {
   messages: Message[]
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
-  room: string
+  messagesEndRef: React.RefObject<HTMLDivElement | null>
+  highlightedMessageId: string | null
   selectedQuote: Message | null
   setSelectedQuote: (msg: Message | null) => void
+  onformatTimestamp: (timestamp: number) => string
+  onQuoteClick: (msg: Message) => void
 }
 
 export interface ChatInputProps {
   message: string
   setMessage: React.Dispatch<React.SetStateAction<string>>
-  handleSendMessage: () => void
   fileInputRef: React.RefObject<HTMLInputElement | null>
   file: File | null
-  setFile: React.Dispatch<React.SetStateAction<File | null>>
+  onKeyDown: (e: React.KeyboardEvent) => void
+  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
 }
 
 export interface ChatBackgroundProps {
-  setBackgroundImage: React.Dispatch<React.SetStateAction<string | null>>
+  onBackgroundImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void
 }
 
 export interface ChatButtonsProps {
-  setMessage: React.Dispatch<React.SetStateAction<string>>
-  handleSendMessage: () => void
+  onEmojiClick: (emojiObject: { emoji: string }) => void
+  onSendMessage: () => void
 }

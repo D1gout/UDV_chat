@@ -4,24 +4,11 @@ import { ChatInputProps } from '../../../types/types'
 const ChatInput: React.FC<ChatInputProps> = ({
   message,
   setMessage,
-  handleSendMessage,
   fileInputRef,
   file,
-  setFile,
+  onKeyDown,
+  onFileChange,
 }) => {
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0])
-    }
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSendMessage()
-    }
-  }
-
   return (
     <>
       <textarea
@@ -29,7 +16,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         placeholder='Сообщение'
         value={message}
         onChange={e => setMessage(e.target.value)}
-        onKeyDown={handleKeyDown}
+        onKeyDown={onKeyDown}
       />
       <div className='chat-input-container'>
         <button
@@ -42,7 +29,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           ref={fileInputRef}
           type='file'
           accept='image/*,video/*'
-          onChange={handleFileChange}
+          onChange={onFileChange}
           style={{ display: 'none' }}
         />
 
