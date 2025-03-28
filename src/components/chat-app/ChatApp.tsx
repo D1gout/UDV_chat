@@ -89,19 +89,9 @@ const ChatApp: React.FC = () => {
     }
   }
 
-  const handleBackgroundChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
-      const reader = new FileReader()
-
-      reader.onloadend = () => {
-        const imageUrl = reader.result as string
-        setBackgroundImage(imageUrl)
-        sessionStorage.setItem('chat_background', imageUrl)
-      }
-
-      reader.readAsDataURL(file)
-    }
+  const handleBackgroundChange = (base64: string | null) => {
+    setBackgroundImage(base64)
+    sessionStorage.setItem('chat_background', base64 || '')
   }
 
   const handleQuoteClick = (msg: Message) => {

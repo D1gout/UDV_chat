@@ -27,7 +27,7 @@ export interface ChatInputProps {
 }
 
 export interface ChatBackgroundProps {
-  onBackgroundImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onBackgroundImageChange: (base64: string | null) => void
 }
 
 export interface ChatButtonsProps {
